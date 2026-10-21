@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentTest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CodeCoverageReport</a> &gt; <a href="index.source.html" class="el_package">ltu</a> &gt; <span class="el_source">PaymentTest.java</span></div><h1>PaymentTest.java</h1><pre class="source lang-java linenums">package ltu;
+
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
+<span class="fc" id="L7">public class PaymentTest</span>
+{
+    private static final String LOAN_ONLY_RULES =
+        &quot;student100loan=7088\nstudent100subsidy=0\nstudent50loan=3564\nstudent50subsidy=0\n&quot; +
+        &quot;student0loan=0\nstudent0subsidy=0\nfulltimeIncome=85813\nparttimeIncome=128722\n&quot;;
+
+    private static final String SUBSIDY_ONLY_RULES =
+        &quot;student100loan=0\nstudent100subsidy=2816\nstudent50loan=0\nstudent50subsidy=1396\n&quot; +
+        &quot;student0loan=0\nstudent0subsidy=0\nfulltimeIncome=85813\nparttimeIncome=128722\n&quot;;
+
+    private PaymentImpl payment(String yyyyMMdd) throws Exception
+    {
+        return new PaymentImpl(new FakeCalendar(yyyyMMdd));
+    }
+
+    // Payment with custom rules, used to isolate loan from subsidy.
+    private PaymentImpl payment(String yyyyMMdd, String rules) throws Exception
+<span class="fc" id="L24">    {</span>
+        return new PaymentImpl(new FakeCalendar(yyyyMMdd), rules);
+    }
+
+    private static String personId(int birthYear)
+    {
+<span class="fc" id="L30">        return String.format(&quot;123456-1234&quot;, birthYear);</span>
+    }
+
+    // Study pace requirements
+    @Test
+    public void studyRateBelow50GetsNoSubsidy() throws Exception
+<span class="fc" id="L36">    {</span>
+        assertEquals(0, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), 0, 49, 100));
+    }
+
+    @Test
+    public void halfTimeStudyGetsHalfSubsidy() throws Exception
+    {
+        assertEquals(4960, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), 0, 50, 100));
+<span class="fc" id="L44">    }</span>
+<span class="fc" id="L45"></span>
+    @Test
+    public void justBelowFullTimeGetsHalfSubsidy() throws Exception
+    {
+        assertEquals(4960, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), 0, 99, 100));
+<span class="fc" id="L50">    }</span>
+<span class="fc" id="L51"></span>
+    @Test
+    public void fullTimeStudyGetsFullSubsidy() throws Exception
+    {
+        assertEquals(9904, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), 0, 100, 100));
+<span class="fc" id="L56">    }</span>
+<span class="fc" id="L57"></span>
+    // Income limits
+    @Test
+    public void fullTimeIncomeAtLimitGetsAmount() throws Exception
+    {
+<span class="fc" id="L62">        assertEquals(9904, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), 85813, 100, 100));</span>
+<span class="fc" id="L63">    }</span>
+
+    @Test
+    public void fullTimeIncomeOverLimitGetsNothing() throws Exception
+    {
+        assertEquals(0, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), 85814, 100, 100));
+    }
+<span class="fc" id="L70"></span>
+<span class="fc" id="L71">    @Test</span>
+    public void partTimeIncomeAtLimitGetsAmount() throws Exception
+    {
+        assertEquals(4960, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), 128722, 50, 100));
+    }
+<span class="fc" id="L76"></span>
+<span class="fc" id="L77">    @Test</span>
+    public void partTimeIncomeOverLimitGetsNothing() throws Exception
+    {
+        assertEquals(0, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), 128723, 50, 100));
+    }
+<span class="fc" id="L82"></span>
+<span class="fc" id="L83">    // Completion ratio requirement</span>
+    @Test
+    public void completionBelow50GetsNothing() throws Exception
+    {
+        assertEquals(0, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), 0, 100, 49));
+<span class="fc" id="L88">    }</span>
+<span class="fc" id="L89"></span>
+    @Test
+    public void completionAt50GetsAmount() throws Exception
+    {
+        assertEquals(9904, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), 0, 100, 50));
+    }
+
+<span class="fc" id="L96">    // Age requirements</span>
+<span class="fc" id="L97">    @Test</span>
+    public void age19GetsNothing() throws Exception
+    {
+        assertEquals(0, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1997), 0, 100, 100));
+    }
+<span class="fc" id="L102"></span>
+<span class="fc" id="L103">    @Test</span>
+    public void age20GetsFullAmount() throws Exception
+    {
+        assertEquals(9904, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1996), 0, 100, 100));
+    }
+
+    @Test
+<span class="fc" id="L110">    public void age46GetsFullAmount() throws Exception</span>
+<span class="fc" id="L111">    {</span>
+        assertEquals(9904, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1970), 0, 100, 100));
+    }
+
+    @Test
+<span class="fc" id="L116">    public void age47GetsSubsidyOnly() throws Exception</span>
+<span class="fc" id="L117">    {</span>
+        assertEquals(2816, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1969), 0, 100, 100));
+    }
+
+    @Test
+<span class="fc" id="L122">    public void age56GetsSubsidyOnly() throws Exception</span>
+<span class="fc" id="L123">    {</span>
+        assertEquals(2816, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1960), 0, 100, 100));
+    }
+
+    @Test
+<span class="fc" id="L128">    public void age57GetsNothing() throws Exception</span>
+<span class="fc" id="L129">    {</span>
+        assertEquals(0, payment(&quot;20160315&quot;).getMonthlyAmount(personId(1959), 0, 100, 100));
+    }
+
+    // Paid amounts
+<span class="fc" id="L134">    @Test</span>
+<span class="fc" id="L135">    public void fullTimeLoanIs7088() throws Exception</span>
+    {
+        assertEquals(7088, payment(&quot;20160315&quot;, LOAN_ONLY_RULES).getMonthlyAmount(personId(1991), 0, 100, 100));
+    }
+
+<span class="fc" id="L140">    @Test</span>
+<span class="fc" id="L141">    public void halfTimeLoanIs3564() throws Exception</span>
+    {
+        assertEquals(3564, payment(&quot;20160315&quot;, LOAN_ONLY_RULES).getMonthlyAmount(personId(1991), 0, 50, 100));
+    }
+
+    @Test
+    public void fullTimeSubsidyIs2816() throws Exception
+<span class="fc" id="L148">    {</span>
+<span class="fc" id="L149">        assertEquals(2816, payment(&quot;20160315&quot;, SUBSIDY_ONLY_RULES).getMonthlyAmount(personId(1991), 0, 100, 100));</span>
+    }
+
+    @Test
+    public void halfTimeSubsidyIs1396() throws Exception
+<span class="fc" id="L154">    {</span>
+<span class="fc" id="L155">        assertEquals(1396, payment(&quot;20160315&quot;, SUBSIDY_ONLY_RULES).getMonthlyAmount(personId(1991), 0, 50, 100));</span>
+    }
+
+    // Payment day
+    @Test
+<span class="fc" id="L160">    public void januaryPaymentDayIsLastFriday() throws Exception</span>
+<span class="fc" id="L161">    {</span>
+        assertEquals(&quot;20160129&quot;, payment(&quot;20160115&quot;).getNextPaymentDay());
+    }
+
+    @Test
+<span class="fc" id="L166">    public void februaryPaymentDayIsLastWeekday() throws Exception</span>
+<span class="fc" id="L167">    {</span>
+        assertEquals(&quot;20160229&quot;, payment(&quot;20160215&quot;).getNextPaymentDay());
+    }
+
+    @Test
+    public void marchPaymentDayIsLastWeekday() throws Exception
+    {
+<span class="fc" id="L174">        assertEquals(&quot;20160331&quot;, payment(&quot;20160315&quot;).getNextPaymentDay());</span>
+<span class="fc" id="L175">    }</span>
+
+    @Test
+    public void aprilPaymentDayIsLastFriday() throws Exception
+    {
+<span class="fc" id="L180">        assertEquals(&quot;20160429&quot;, payment(&quot;20160415&quot;).getNextPaymentDay());</span>
+<span class="fc" id="L181">    }</span>
+
+    // Invalid input handling
+    @Test(expected = IllegalArgumentException.class)
+    public void nullPersonIdThrows() throws Exception
+<span class="fc" id="L186">    {</span>
+<span class="fc" id="L187">        payment(&quot;20160315&quot;).getMonthlyAmount(null, 0, 100, 100);</span>
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void negativeIncomeThrows() throws Exception
+<span class="fc" id="L192">    {</span>
+<span class="fc" id="L193">        payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), -1, 100, 100);</span>
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void negativeStudyRateThrows() throws Exception
+    {
+        payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), 0, -1, 100);
+<span class="nc" id="L200">    }</span>
+<span class="nc" id="L201"></span>
+    @Test(expected = IllegalArgumentException.class)
+    public void negativeCompletionRatioThrows() throws Exception
+    {
+        payment(&quot;20160315&quot;).getMonthlyAmount(personId(1991), 0, 100, -1);
+<span class="nc" id="L206">    }</span>
+<span class="nc" id="L207"></span>
+    @Test(expected = IllegalArgumentException.class)
+    public void tooShortPersonIdThrows() throws Exception
+    {
+        payment(&quot;20160315&quot;).getMonthlyAmount(&quot;19960315-12&quot;, 0, 100, 100);
+<span class="nc" id="L212">    }</span>
+<span class="nc" id="L213"></span>
+    @Test(expected = IllegalArgumentException.class)
+    public void tooLongPersonIdThrows() throws Exception
+    {
+        payment(&quot;20160315&quot;).getMonthlyAmount(&quot;19960315-12345&quot;, 0, 100, 100);
+<span class="nc" id="L218">    }</span>
+<span class="nc" id="L219">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
