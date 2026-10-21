@@ -27,7 +27,7 @@ public class PaymentTest
 
     private static String personId(int birthYear)
     {
-        return String.format("123456-1234", birthYear);
+        return String.format("%d1234-1234", birthYear);
     }
 
     // Study pace requirements
