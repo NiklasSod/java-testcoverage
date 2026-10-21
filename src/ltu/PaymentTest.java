@@ -32,63 +32,63 @@ public class PaymentTest
 
     // Study pace requirements
     @Test
-    public void studyRateBelow50GetsNoSubsidy() throws Exception
+    public void req201_studyRateBelow50GetsNoSubsidy() throws Exception
     {
         assertEquals(0, payment("20160315").getMonthlyAmount(personId(1991), 0, 49, 100));
     }
 
     @Test
-    public void halfTimeStudyGetsHalfSubsidy() throws Exception
+    public void req202_halfTimeStudyGetsHalfSubsidy() throws Exception
     {
         assertEquals(4960, payment("20160315").getMonthlyAmount(personId(1991), 0, 50, 100));
     }
 
     @Test
-    public void justBelowFullTimeGetsHalfSubsidy() throws Exception
+    public void req202_justBelowFullTimeGetsHalfSubsidy() throws Exception
     {
         assertEquals(4960, payment("20160315").getMonthlyAmount(personId(1991), 0, 99, 100));
     }
 
     @Test
-    public void fullTimeStudyGetsFullSubsidy() throws Exception
+    public void req203_fullTimeStudyGetsFullSubsidy() throws Exception
     {
         assertEquals(9904, payment("20160315").getMonthlyAmount(personId(1991), 0, 100, 100));
     }
 
     // Income limits
     @Test
-    public void fullTimeIncomeAtLimitGetsAmount() throws Exception
+    public void req301_fullTimeIncomeAtLimitGetsAmount() throws Exception
     {
         assertEquals(9904, payment("20160315").getMonthlyAmount(personId(1991), 85813, 100, 100));
     }
 
     @Test
-    public void fullTimeIncomeOverLimitGetsNothing() throws Exception
+    public void req301_fullTimeIncomeOverLimitGetsNothing() throws Exception
     {
         assertEquals(0, payment("20160315").getMonthlyAmount(personId(1991), 85814, 100, 100));
     }
 
     @Test
-    public void partTimeIncomeAtLimitGetsAmount() throws Exception
+    public void req302_partTimeIncomeAtLimitGetsAmount() throws Exception
     {
         assertEquals(4960, payment("20160315").getMonthlyAmount(personId(1991), 128722, 50, 100));
     }
 
     @Test
-    public void partTimeIncomeOverLimitGetsNothing() throws Exception
+    public void req302_partTimeIncomeOverLimitGetsNothing() throws Exception
     {
         assertEquals(0, payment("20160315").getMonthlyAmount(personId(1991), 128723, 50, 100));
     }
 
     // Completion ratio requirement
     @Test
-    public void completionBelow50GetsNothing() throws Exception
+    public void req401_completionBelow50GetsNothing() throws Exception
     {
         assertEquals(0, payment("20160315").getMonthlyAmount(personId(1991), 0, 100, 49));
     }
 
     @Test
-    public void completionAt50GetsAmount() throws Exception
+    public void req401_completionAt50GetsAmount() throws Exception
     {
         assertEquals(9904, payment("20160315").getMonthlyAmount(personId(1991), 0, 100, 50));
     }
@@ -132,50 +132,50 @@ public class PaymentTest
 
     // Paid amounts
     @Test
-    public void fullTimeLoanIs7088() throws Exception
+    public void req501_req505_fullTimeLoanIs7088() throws Exception
     {
         assertEquals(7088, payment("20160315", LOAN_ONLY_RULES).getMonthlyAmount(personId(1991), 0, 100, 100));
     }
 
     @Test
-    public void halfTimeLoanIs3564() throws Exception
+    public void req503_req505_halfTimeLoanIs3564() throws Exception
     {
         assertEquals(3564, payment("20160315", LOAN_ONLY_RULES).getMonthlyAmount(personId(1991), 0, 50, 100));
     }
 
     @Test
-    public void fullTimeSubsidyIs2816() throws Exception
+    public void req502_fullTimeSubsidyIs2816() throws Exception
     {
         assertEquals(2816, payment("20160315", SUBSIDY_ONLY_RULES).getMonthlyAmount(personId(1991), 0, 100, 100));
     }
 
     @Test
-    public void halfTimeSubsidyIs1396() throws Exception
+    public void req504_halfTimeSubsidyIs1396() throws Exception
     {
         assertEquals(1396, payment("20160315", SUBSIDY_ONLY_RULES).getMonthlyAmount(personId(1991), 0, 50, 100));
     }
 
     // Payment day
     @Test
-    public void januaryPaymentDayIsLastFriday() throws Exception
+    public void req506_januaryPaymentDayIsLastFriday() throws Exception
     {
         assertEquals("20160129", payment("20160115").getNextPaymentDay());
     }
 
     @Test
-    public void februaryPaymentDayIsLastWeekday() throws Exception
+    public void req506_februaryPaymentDayIsLastWeekday() throws Exception
     {
         assertEquals("20160229", payment("20160215").getNextPaymentDay());
     }
 
     @Test
-    public void marchPaymentDayIsLastWeekday() throws Exception
+    public void req506_marchPaymentDayIsLastWeekday() throws Exception
     {
         assertEquals("20160331", payment("20160315").getNextPaymentDay());
     }
 
     @Test
-    public void aprilPaymentDayIsLastFriday() throws Exception
+    public void req506_aprilPaymentDayIsLastFriday() throws Exception
     {
         assertEquals("20160429", payment("20160415").getNextPaymentDay());
     }
